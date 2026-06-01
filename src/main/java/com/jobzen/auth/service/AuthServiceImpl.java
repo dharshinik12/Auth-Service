@@ -1,0 +1,46 @@
+package com.jobzen.auth.service;
+import com.jobzen.auth.dto.LoginRequest;
+import com.jobzen.auth.dto.RegisterRequest;
+import com.jobzen.auth.entity.User;
+import com.jobzen.auth.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import com.jobzen.auth.security.JwtService;
+import java.util.HashSet;
+
+@Service
+@RequiredArgsConstructor
+public class AuthServiceImpl implements AuthService  {
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+
+    @Override
+    public String register(RegisterRequest request) {
+
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRoles(new HashSet<>());
+
+        userRepository.save(user);
+
+        return "User registered successfully";
+    }
+
+    @Override
+    public String login(LoginRequest request) {
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(
+                request.getPassword(),
+                user.getPassword())) {
+            throw new RuntimeException("Invalid password");
+        }
+
+        return jwtService.generateToken(user.getEmail());
+    }
+}

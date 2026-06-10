@@ -1,5 +1,6 @@
 package com.jobzen.auth.security;
 
+import com.jobzen.auth.entity.Role;
 import com.jobzen.auth.entity.User;
 import com.jobzen.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,12 @@ public class CustomUserDetailsService implements UserDetailsService{
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
                 .password(user.getPassword())
-                .authorities("USER")
+                .authorities(
+                        user.getRoles()
+                                .stream()
+                                .map(Role::getName)
+                                .toArray(String[]::new)
+                )
                 .build();
     }
 }

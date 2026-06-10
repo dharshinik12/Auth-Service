@@ -5,6 +5,7 @@ import com.jobzen.auth.dto.RegisterRequest;
 import com.jobzen.auth.entity.User;
 import com.jobzen.auth.repository.UserRepository;
 import com.jobzen.auth.security.JwtService;
+import com.jobzen.auth.security.RevokedTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,11 +34,14 @@ class AuthServiceImplTest {
     @Mock
     private JwtService jwtService;
 
+    @Mock
+    private RevokedTokenService revokedTokenService;
+
     private AuthServiceImpl authService;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthServiceImpl(userRepository, passwordEncoder, jwtService);
+        authService = new AuthServiceImpl(userRepository, passwordEncoder, jwtService, revokedTokenService);
     }
 
     @Test
@@ -142,5 +146,24 @@ class AuthServiceImplTest {
 
         assertEquals("Invalid password", exception.getMessage());
         verify(jwtService, never()).generateToken(org.mockito.Mockito.anyString());
+    }
+
+    @Test
+    void logoutShouldRevokeTokenAndReturnSuccessMessage() {
+        String result = authService.logout("jwt-token");
+
+        assertEquals("User logged out successfully", result);
+        verify(revokedTokenService).revokeToken("jwt-token");
+    }
+
+    @Test
+    void logoutShouldThrowWhenTokenIsMissing() {
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> authService.logout(" ")
+        );
+
+        assertEquals("Token is required", exception.getMessage());
+        verify(revokedTokenService, never()).revokeToken(org.mockito.Mockito.anyString());
     }
 }

@@ -1,6 +1,8 @@
 package com.jobzen.auth.security;
 
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,11 +38,7 @@ public class JwtService {
 
     public String extractEmail(String token) {
 
-        return Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
+        return extractClaims(token)
                 .getSubject();
     }
 
@@ -52,14 +50,24 @@ public class JwtService {
 
     public boolean isTokenExpired(String token) {
 
-        Date expiration =
-                Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getExpiration();
+        return extractExpiration(token).before(new Date());
+    }
 
-        return expiration.before(new Date());
+    public Date extractExpiration(String token) {
+
+        return extractClaims(token)
+                .getExpiration();
+    }
+
+    private Claims extractClaims(String token) {
+        try {
+            return Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (ExpiredJwtException ex) {
+            return ex.getClaims();
+        }
     }
 }

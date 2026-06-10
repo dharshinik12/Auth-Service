@@ -8,7 +8,8 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/jobzen_auth
     username: postgres
-    password: Priya12
+    password: Subash@31072002
+
 
   jpa:
     hibernate:
@@ -24,3 +25,8 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+
+
+jwt:
+  secret: mysecretkeymysecretkeymysecretkey12345
+  expiration: 86400000

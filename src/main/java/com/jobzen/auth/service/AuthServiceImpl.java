@@ -3,6 +3,7 @@ import com.jobzen.auth.dto.LoginRequest;
 import com.jobzen.auth.dto.RegisterRequest;
 import com.jobzen.auth.entity.User;
 import com.jobzen.auth.repository.UserRepository;
+import com.jobzen.auth.security.RevokedTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ public class AuthServiceImpl implements AuthService  {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RevokedTokenService revokedTokenService;
 
     @Override
     public String register(RegisterRequest request) {
@@ -46,5 +48,15 @@ public class AuthServiceImpl implements AuthService  {
         }
 
         return jwtService.generateToken(user.getEmail());
+    }
+
+    @Override
+    public String logout(String token) {
+        if (token == null || token.isBlank()) {
+            throw new RuntimeException("Token is required");
+        }
+
+        revokedTokenService.revokeToken(token);
+        return "User logged out successfully";
     }
 }
